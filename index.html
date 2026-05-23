@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Race Condition & Thread Synchronization</title>
+  <meta name="description" content="Presentasi interaktif sistem operasi tentang race condition dan thread synchronization.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-grid" aria-hidden="true"></div>
+  <div class="scanline" aria-hidden="true"></div>
+
+  <nav class="topbar" aria-label="Navigasi presentasi">
+    <a class="brand" href="#hero" aria-label="Kembali ke awal">
+      <span class="brand-dot"></span>
+      RACE_CONDITION::SYNC
+    </a>
+    <div class="nav-links">
+      <a href="#hero">01_PENGANTAR</a>
+      <a href="#race">04_BALAPAN</a>
+      <a href="#sync">08_SYNC</a>
+      <a href="#conclusion">12_AKHIR</a>
+    </div>
+    <div class="nav-tools" aria-label="Status">
+      <span class="material-symbols-outlined">terminal</span>
+      <span class="material-symbols-outlined">analytics</span>
+    </div>
+  </nav>
+
+  <main>
+    <section id="hero" class="section hero">
+      <div class="hero-copy reveal">
+        <p class="kicker">SYSTEM.OS_KERNEL_INIT</p>
+        <h1>Race Condition &amp;<br>Thread Synchronization</h1>
+        <p class="lead">Bagaimana sistem operasi modern menjaga eksekusi konkuren tetap aman, mencegah korupsi data, dan mengatur thread yang saling berebut resource.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#race">Initialize Execution</a>
+          <a class="button ghost" href="#sync">Trace Synchronization</a>
+        </div>
+      </div>
+      <div class="kernel-card reveal" id="heroScheduler" aria-label="Visual kernel scheduler" role="button" tabindex="0">
+        <div class="panel-title">
+          <span>KERNEL_TRACE</span>
+          <span id="heroSchedulerState">AUTO_TRACE</span>
+        </div>
+        <div class="chip" id="heroChip">
+          <div class="chip-label">CPU_0</div>
+          <div class="core active" data-core="T1">T1</div>
+          <div class="core" data-core="T2">T2</div>
+          <div class="core" data-core="T3">T3</div>
+          <div class="core waiting" data-core="WAIT">WAIT</div>
+        </div>
+        <div class="trace-list" id="heroTrace">
+          <span data-trace="0">LOAD counter</span>
+          <span data-trace="1">TIMER interrupt</span>
+          <span data-trace="2">STORE stale value</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="why" class="section split">
+      <div class="section-copy reveal">
+        <p class="kicker">02_KONKURENSI</p>
+        <h2>Konkurensi adalah standar, bukan fitur tambahan.</h2>
+        <p>ATM, server database, media sosial, dan aplikasi finansial melayani banyak operasi yang menyentuh data bersama. Tanpa kontrol, hasil akhirnya bisa benar secara sintaks tetapi salah secara data.</p>
+      </div>
+      <div class="case-grid">
+        <article class="tech-card reveal">
+          <span class="material-symbols-outlined">account_balance</span>
+          <h3>Sistem Perbankan</h3>
+          <p>Transaksi simultan pada akun yang sama perlu locking agar saldo tidak hilang diam-diam.</p>
+        </article>
+        <article class="tech-card reveal">
+          <span class="material-symbols-outlined">hub</span>
+          <h3>Platform Sosial</h3>
+          <p>Likes, views, dan notifikasi adalah counter bersama dengan beban tulis tinggi.</p>
+        </article>
+        <article class="tech-card reveal wide">
+          <span class="material-symbols-outlined">database</span>
+          <h3>Mesin Basis Data</h3>
+          <p>ACID bergantung pada isolasi transaksi, lock manager, dan strategi penyelesaian deadlock.</p>
+          <code>BEGIN; UPDATE balances SET amt = amt - 100; COMMIT;</code>
+        </article>
+      </div>
+    </section>
+
+    <section id="memory" class="section">
+      <div class="section-heading reveal">
+        <p class="kicker">03_TOPOLOGI_MEMORI</p>
+        <h2>Process memberi isolasi. Thread memberi kecepatan lewat berbagi memori.</h2>
+      </div>
+      <div class="memory-layout">
+        <div class="address-space reveal" id="addressSpace">
+          <div class="mem-segment shared" data-memory="shared">CODE + DATA <span>shared</span></div>
+          <div class="mem-segment heap" data-memory="heap">HEAP <span>shared allocation</span></div>
+          <div class="stack-row">
+            <div class="stack" data-memory="stack">T1 STACK</div>
+            <div class="stack" data-memory="stack">T2 STACK</div>
+            <div class="stack" data-memory="stack">T3 STACK</div>
+          </div>
+        </div>
+        <div class="note-stack reveal">
+          <div class="note active" data-note="shared"><b>Shared segments</b><span>Global variable dan heap dapat disentuh beberapa thread.</span></div>
+          <div class="note" data-note="stack"><b>Private stacks</b><span>Variabel lokal dan frame fungsi tetap milik masing-masing thread.</span></div>
+          <div class="note" data-note="heap"><b>Risk point</b><span>Masalah muncul saat operasi baca-ubah-tulis tidak atomik.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="scheduler" class="section">
+      <div class="section-heading reveal">
+        <p class="kicker">04_PENJADWALAN_CPU</p>
+        <h2>Context switch membuat pekerjaan terlihat berjalan bersama.</h2>
+      </div>
+      <div class="scheduler">
+        <div class="queue reveal">
+          <div class="panel-title"><span>READY_QUEUE</span><span>2 WAITING</span></div>
+          <div class="thread-token" data-scheduler-token="ready">Thread_B [204]</div>
+          <div class="thread-token">Thread_C [205]</div>
+        </div>
+        <div class="cpu-panel reveal">
+          <div class="active-badge">ACTIVE_CORE</div>
+          <span class="material-symbols-outlined">memory</span>
+          <strong id="schedulerCpuLabel">CPU_0</strong>
+          <p id="schedulerStatus">Thread_A sedang menggunakan quantum waktu sebelum scheduler memicu preemption.</p>
+        </div>
+        <div class="queue reveal">
+          <div class="panel-title"><span>WAIT_QUEUE</span><span>IDLE</span></div>
+          <div class="thread-token ghost-token" data-scheduler-token="wait">I/O kosong</div>
+        </div>
+      </div>
+      <div class="scheduler-gantt reveal" id="schedulerGantt">
+        <span data-lane="0">T_A</span>
+        <span data-lane="1">T_B</span>
+        <span data-lane="2">I/O</span>
+        <span data-lane="3">T_C</span>
+      </div>
+    </section>
+
+    <section id="race" class="section">
+      <div class="section-heading reveal">
+        <p class="kicker danger">05_KONDISI_BALAPAN</p>
+        <h2>Dua thread benar sendiri, tetapi hasil akhirnya korup.</h2>
+      </div>
+      <div class="race-layout">
+        <div class="counter-card reveal">
+          <span>SHARED_MEMORY</span>
+          <strong id="sharedCounter">100</strong>
+          <button class="button primary" id="runRace">&gt; RUN_SIMULATION</button>
+          <button class="button ghost compact" id="stepRace">&gt; NEXT_STEP</button>
+        </div>
+        <div class="code-board reveal">
+          <div class="thread-code" id="threadA">
+            <h3>Thread_A <small id="regA">R1: --</small></h3>
+            <p data-step="a1">1. LOAD R1, counter</p>
+            <p data-step="a2">2. ADD R1, 1</p>
+            <p data-step="as" class="danger-line">-- CONTEXT SWITCH --</p>
+            <p data-step="a3">3. STORE R1, counter</p>
+          </div>
+          <div class="thread-code" id="threadB">
+            <h3>Thread_B <small id="regB">R2: --</small></h3>
+            <p data-step="b0" class="muted-line">-- PREEMPTED --</p>
+            <p data-step="b1">1. LOAD R2, counter</p>
+            <p data-step="b2">2. ADD R2, 1</p>
+            <p data-step="b3">3. STORE R2, counter</p>
+          </div>
+        </div>
+        <div class="terminal reveal" id="raceTerminal">
+          <div class="terminal-bar"><span></span><span></span><span></span><label>root@sys: ./run_counter</label></div>
+          <div class="terminal-output"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="critical" class="section">
+      <div class="section-heading reveal">
+        <p class="kicker danger">06_CRITICAL_SECTION</p>
+        <h2>Zona rentan biasanya kecil: satu baris seperti <code>counter++</code>.</h2>
+      </div>
+      <div class="collision-stage reveal">
+        <div class="entry-lane">
+          <div class="collision-thread" id="collideA">Thread_A</div>
+          <div class="collision-thread" id="collideB">Thread_B</div>
+        </div>
+        <div class="critical-box">
+          <span>CRITICAL_SECTION</span>
+          <code>counter++</code>
+          <p id="collisionStatus">1 thread allowed</p>
+        </div>
+        <button class="button ghost" id="runCollision">&gt; TEST_COLLISION</button>
+      </div>
+    </section>
+
+    <section id="sync" class="section">
+      <div class="section-heading reveal">
+        <p class="kicker safe">07_MUTEX_LOCK</p>
+        <h2>Mutex membuat akses kritis menjadi bergiliran dan dapat diprediksi.</h2>
+      </div>
+      <div class="mutex-grid">
+        <div class="lock-flow reveal">
+          <div class="flow-step" id="flowAcquire"><span class="material-symbols-outlined">key</span><b>ACQUIRE</b><p>Thread meminta akses eksklusif.</p></div>
+          <div class="flow-step active" id="flowExecute"><span class="material-symbols-outlined" id="lockIcon">lock_open</span><b>EXECUTE</b><p>Critical section berjalan aman.</p></div>
+          <div class="flow-step" id="flowRelease"><span class="material-symbols-outlined">lock_open_right</span><b>RELEASE</b><p>Lock dilepas untuk thread berikutnya.</p></div>
+        </div>
+        <div class="code-snippet reveal">
+          <button class="button primary" id="toggleMutex">&gt; TOGGLE_LOCK</button>
+          <div class="mutex-lane" id="mutexLane">
+            <span class="runner active">Thread_A</span>
+            <span class="gate">LOCK</span>
+            <span class="runner waiting">Thread_B</span>
+          </div>
+          <pre><code>mutex_lock(&amp;lock);
+counter++;  // protected
+mutex_unlock(&amp;lock);</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="semaphore" class="section split">
+      <div class="section-copy reveal">
+        <p class="kicker">08_SHARED_MEMORY</p>
+        <h2>Semaphore mengatur koordinasi producer dan consumer.</h2>
+        <p>Nilai <code>empty</code>, <code>full</code>, dan <code>mutex</code> menjaga buffer bersama agar tidak dibaca saat kosong atau ditimpa saat penuh.</p>
+        <div class="sem-status">
+          <span>empty=<b id="emptyCount">4</b></span>
+          <span>full=<b id="fullCount">1</b></span>
+          <span>mutex=<b id="mutexCount">1</b></span>
+        </div>
+      </div>
+      <div class="buffer-lab reveal">
+        <div class="actor">PRODUCER</div>
+        <div class="buffer" id="bufferCells">
+          <span class="filled">D1</span><span>D2</span><span></span><span></span><span></span>
+        </div>
+        <div class="actor">CONSUMER</div>
+      </div>
+    </section>
+
+    <section id="demo" class="section">
+      <div class="section-heading reveal">
+        <p class="kicker">09_LIVE_DEMO</p>
+        <h2>Output terminal memperlihatkan bedanya data korup dan data aman.</h2>
+      </div>
+      <div class="demo-terminal reveal">
+        <div class="tab-row">
+          <button class="tab active" data-tab="nosync">No Sync</button>
+          <button class="tab" data-tab="mutex">Mutex</button>
+          <button class="tab" data-tab="semaphore">Semaphore</button>
+        </div>
+        <pre id="terminalContent"></pre>
+      </div>
+    </section>
+
+    <section id="performance" class="section">
+      <div class="section-heading reveal">
+        <p class="kicker">10_THROUGHPUT</p>
+        <h2>Sinkronisasi menukar sedikit throughput untuk integritas data.</h2>
+      </div>
+      <div class="perf-layout reveal">
+        <div class="bar-chart" id="perfChart">
+          <div style="--h: 88%"><span></span><label>Tanpa Lock</label></div>
+          <div style="--h: 68%"><span></span><label>Mutex</label></div>
+          <div style="--h: 78%"><span></span><label>RW Lock</label></div>
+        </div>
+        <div class="metric-list">
+          <div><span>Speed</span><b>Tinggi tanpa lock, tetapi berisiko.</b></div>
+          <div><span>Correctness</span><b>Naik tajam saat critical section dilindungi.</b></div>
+          <div><span>Tradeoff</span><b>OS memilih stabilitas sebelum angka mentah.</b></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="conclusion" class="section conclusion">
+      <p class="kicker reveal">12_KESIMPULAN</p>
+      <h2 class="reveal">Fondasi Arsitektur Modern.</h2>
+      <div class="final-grid">
+        <article class="reveal"><b>Realita Konkurensi</b><p>Race condition menghancurkan integritas data secara diam-diam.</p></article>
+        <article class="reveal"><b>Mitigasi Risiko</b><p>Mutex, semaphore, dan monitor memberi kontrol struktural.</p></article>
+        <article class="reveal"><b>Evolusi OS</b><p>Thread modern berdiri di atas prinsip klasik sinkronisasi.</p></article>
+      </div>
+      <a class="button primary reveal" href="#hero">SELESAI_PRESENTASI</a>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>(c) 2026 TERMINAL_SYSTEMS</span>
+    <a href="#hero">KEMBALI KE AWAL</a>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
