@@ -1,0 +1,23 @@
+====================================
+RACE CONDITION DEMONSTRATION
+====================================
+
+Threads          : 2
+Increments/Thread: 1000000
+Synchronization  : NONE
+Interleaving     : sched_yield() + usleep()
+
+[Thread_1] completed 1000000 unsafe increments
+[Thread_2] completed 1000000 unsafe increments
+
+------------------------------------
+RESULT
+------------------------------------
+Expected Counter : 2000000
+Actual Counter   : 1483921
+Data Lost        : 516079
+
+Execution Time   : 0.318421 sec
+Data Integrity   : FAILED
+
+STATUS : DATA CORRUPTED

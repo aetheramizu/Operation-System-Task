@@ -1,0 +1,39 @@
+====================================
+SEMAPHORE PRODUCER-CONSUMER DEMO
+====================================
+
+Buffer Size      : 5
+Items Produced   : 12
+Semaphores       : empty, full, mutex
+
+
+[PRODUCER]
+Produced : 7
+Buffer   : [ 7,  -,  -,  -,  -]
+Semaphores after produce  empty=4 full=1 mutex=1
+
+[CONSUMER]
+Consumed : 7
+Buffer   : [ -,  -,  -,  -,  -]
+Semaphores after consume  empty=5 full=0 mutex=1
+
+[PRODUCER]
+Produced : 14
+Buffer   : [ -, 14,  -,  -,  -]
+Semaphores after produce  empty=4 full=1 mutex=1
+
+[PRODUCER]
+Produced : 21
+Buffer   : [ -, 14, 21,  -,  -]
+Semaphores after produce  empty=3 full=2 mutex=1
+
+[CONSUMER]
+Consumed : 14
+Buffer   : [ -,  -, 21,  -,  -]
+Semaphores after consume  empty=4 full=1 mutex=1
+
+...
+
+====================================
+STATUS : PRODUCER-CONSUMER COORDINATED
+====================================
